@@ -1,2 +1,0 @@
-# Optional local runtime verification; not required for static ROM analysis.
-pyboy==2.9.0
