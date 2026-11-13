@@ -1,3 +1,17 @@
+# Python
 .venv/
 __pycache__/
 *.py[cod]
+.pytest_cache/
+
+# ROM images: never commit copyrighted cartridges. Drop them in romfs/
+# and this repo stays clean; see romfs/README.md.
+romfs/*
+!romfs/README.md
+*.gb
+*.gbc
+*.rom
+
+# Generated disassembly / build output
+out/
+build/
