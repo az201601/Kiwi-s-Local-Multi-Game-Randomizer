@@ -34,8 +34,12 @@ Ordered by priority for the randomizer. Items resolved on 2026-11-13 are marked 
 12. **Bank-0 slot operand semantics** (`78 70` vs `bc 54` vs `7d 01` vs `da 61`): the two
     bytes differ per bank but are constant per bank — likely a script-VM tag or text-box
     style. Decode via the `$3804` control path or by editing and observing.
-13. **Pet name rendering path**: pet name at `$b8dc-$b8df` is NOT in the `$774c` farcall
-    table. Find how (or whether) the pet name is ever drawn as text.
+13. **Pet name rendering path — RESOLVED**: the pet name is NOT rendered via the dialogue
+    VM farcall table. The status-screen function (bank 9 @ CPU `0x5867`, twin in bank `$29`
+    @ CPU `0x580e`) copies `$b8dc-$b8df` verbatim into tilemap `$98e6` and the farmer name
+    into `$986d`-adjacent/`$9821`; it also builds the WRAM bank-3 `$cdbf` staged string
+    (leading `$05`/`$04` + 4 name bytes) via sister builders at `$7c4d3`/`$7d829` (bank 30)
+    and `$fc3d6`/`$fd718` (bank 63). Dialogue `<N0>`-`<N3>` tokens are farmer-name only.
 14. **Farcall slots `$a4-$ee`** (all point at SRAM: `$b912/$b913`, `$ba4f-$ba52`, …): map
     these fields — they are likely money/year/relationship/quest bytes rendered into text.
 15. **Bank 0x1b/0x3b record operand**: `46 42 4a` vs `46 33 52` (varies per record) — purpose unknown.
@@ -47,8 +51,8 @@ Ordered by priority for the randomizer. Items resolved on 2026-11-13 are marked 
     `$b919-$b91a` (slots `$c8/$c9`), `$b93c` (00→19), `$ba53-$ba55` (slots `$ec/$ed/$f0`).
     Which ones are clock/RNG/checksum/counters, and which are the farcall fields the text VM
     actually renders? Cross-check by walking to the first bed-save and see which values move.
-19. **Money storage**: HUD shows 500G at first control; money is NOT at `$b90c-$b90d`
-    (22 d8). Locate the 16-bit money field (search SRAM diff for $01F4).
+19. **Money storage — RESOLVED**: `$b8ef-$b8f0` (u16 LE, `$01f4` = 500 at first control;
+    unchanged by the tour). Status screen stages `$b8ef-$b8f1` into WRAM bank 3 `$ccca-$cccc`.
 20. **First-control position**: farmer stands in the farmhouse at Spring 1 Mon 6 AM;
     SELECT toggles the clock/money HUD. Does leaving via the door trigger Day 1 events
     or a forced sleep?

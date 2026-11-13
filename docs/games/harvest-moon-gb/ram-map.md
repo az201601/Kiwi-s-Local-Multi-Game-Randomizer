@@ -49,9 +49,16 @@ Verified symbols used by the text VM / RTC:
 | `$ccca-$cccc` | money (BCD-ish display copy) | |
 | `$b880-$b885` | RTC shadow: sec,min,hour,day,season?,year | direct mirrors of JP sTimer* |
 | `$b886-$b8xx` | RTC sDayOfWeek? | |
-| `$b8dc-$b8df` | **pet name** (VM font codes, 4 bytes) | new-game; inline render unverified |
+| `$b8dc-$b8df` | **pet name** (VM font codes, 4 bytes) | new-game; status screen copies bytes verbatim to tilemap `$98e6` |
+| `$b8db` | pet-field attribute byte | gates status-screen icon (`or a`/`cp $03`) |
+| `$b8ea` | farmer-field attribute byte | same gating; `0` = default |
+| `$b8eb` | init `$80` | purpose unknown |
+| `$b8ed-$b8ee` | init `$64 $64` | purpose unknown (not glyphs) |
+| `$b8ef-$b8f0` | **money** (u16 LE) | `$01f4` = 500G at first control; status stages `$b8ef-$b8f1` to `$ccca-$ccff` display copy |
 | `$b8f4-$b8f7` | **farmer (player) name** (VM font codes, 4 bytes) | new-game; farcall slots `$a0-$a3` point here |
 | `$b912/$b913` | unknown 2-byte field (referenced by farcall `$a4-$a5`) | init `6d 6e` |
+| `$cdbf` | WRAM bank 3: 4/5 + farmer name bytes (staged by bank-30/63 builders, e.g. `$7c4d3`) | status-screen string buffer |
+| `$cdca-$ccff` | money/staged display bytes (bank 3) | copy of SRAM for rendering |
 | `$bff0-$bffc` | `Back_Up_Check!#$%` ASCII signature (save-verify) | written by new-game SRAM template init |
 | `$a000` | save marker; `$0e` after new-game init (not `'Y'`) | `'Y'`/`'y'` presumably only after bed-save |
 | `$cb17-$cb1f` | checks (`ret nz` chain) — message-busy flags | |

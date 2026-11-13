@@ -164,6 +164,25 @@ The messenger then flies up and the scene fades to the shipping-box tour below.
 (Word-internal hyphens at line breaks are engine auto-hyphens drawn at
 author-marked `$44` points.)
 
+## Name rendering paths (three distinct ones)
+
+1. **Dialogue VM farcall** — records embed `$A0-$A3`; the text VM's farcall handler
+   (`$17:$7739`, pointer table `$17:$774c`) resolves them to SRAM name bytes
+   (`$b8f4-$b8f7`), drawn inline as raw font indices. This is how `<NAME>` appears
+   in dialogue.
+2. **Status screen (bank 9 @ CPU `0x5867`, twin in bank `$29` @ CPU `0x580e`)** —
+   copies farmer name `$b8f4-$b8f7` → tilemap `$9821` (4 cells), 3 bytes
+   `$b8ef-$b8f1` (money + pad) → `$ccca-$cccc` (WRAM bank 3 display copy),
+   stages farmer name into WRAM bank 3 `$cdbf` (leading `$05`/`$04` + 4 name
+   bytes) via sister builders at `$7c4d3`/`$7d829` (bank 30) and
+   `$fc3d6`/`$fd718` (bank 63), and copies pet name `$b8dc-$b8df` → tilemap
+   `$98e6`. Conditional icon tiles at `$98a6-$98a9` depend on `$b8db`/`$b8ea`
+   (attribute bytes, both `0` at new game). `$22f8` = block copy (`ld a,(hl+);
+   ld (de),a`), `$0da9` = hblank wait. **Pet name never goes through the
+   dialogue VM.**
+3. **Name-grid typed rendering** — the typed-glyph tile id is staged at
+   `$9800+0x04a` (shown in the grid), driven by WRAM `$cd65/$cd66` (col/row).
+
 ## Harness notes
 
 - The whole opening (boot → intro) is deterministic under `rtc_lock_experimental(True)`;

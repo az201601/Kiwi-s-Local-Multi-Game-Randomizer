@@ -94,3 +94,6 @@ bytes(pb.memory[0xa000:0xa000+0x2000])
 
 `pb.frame_count` resets to 0 on `load_state`. SRAM/RTC snapshots are produced by
 `pb.stop(save=True)` which flushes the `.ram`/`.rtc` files next to the ROM copy.
+- Intro-cutscene page captures are timing-sensitive: the text box advances on A but
+  pages may scroll a 2-line window with typewriter delay; always compare consecutive
+  screenshots rather than assuming one A-press == one page.
