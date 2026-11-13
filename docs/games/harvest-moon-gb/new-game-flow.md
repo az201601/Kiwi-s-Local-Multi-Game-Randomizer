@@ -20,6 +20,11 @@ Victor copyright → Natsume logo → landscape truck-gate cutscene (~f420–144
 
 ## Questionnaire screens
 
+> Harness note: each of the two question screens eats the first `A` issued while still
+> transitioning from the previous screen. Allow ~100 f after each confirm before pressing
+> `A` again, or press twice — otherwise the flow silently desyncs.
+
+
 - Both name grids are the same screen/mechanics (4-char limit, END tile = row 5 col 11,
   cursor `$cd65/$cd66`, A on END confirms). The farmer grid is shown first with an empty
   name; after the gender/pet questions the game re-enters the grid for the pet name.

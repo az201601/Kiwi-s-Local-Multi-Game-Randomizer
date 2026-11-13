@@ -89,6 +89,15 @@ intro renders name bytes by direct font lookup (name bytes bypass the VM opcode 
 `SP` cell (row 5 col 10) does nothing when A is pressed. `A` on out-of-range col 12
 backspaces one character (and see the flow-breakage note in new-game-flow.md).
 
+Untyped slots (trailing) are filled with `$D8`, drawn as an underscore-style blank in the
+name box / grid header. Names may be fewer than 4 characters; the END confirm accepts them
+and the SRAM slot keeps `$D8` padding.
+
+**Transition swallow**: the gender-pick and pet-preference screens swallow the first `A`
+issued while they are still sliding in (~48 f is not enough spacing from the previous
+screen's confirm). Budget two `A` presses per screen or wait ≥100 f; otherwise the harness
+silently desyncs into typing at whatever cell the cursor is on.
+
 ## Notes for the randomizer
 
 - The `Σ` glyph in row 1 is encodable with the text VM (`text-encoding.md`).
