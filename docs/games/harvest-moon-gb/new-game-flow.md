@@ -76,6 +76,11 @@ are drawn as raw font indices, so name glyph identities differ from record-opcod
 
 ## Name rendering (text VM)
 
+Regression (2026-11-13): short names work end-to-end — farmer `AB`, pet `CD`; SRAM
+`$b8f4-$b8f7` = `00 01 d8 d8`, intro page 1 renders `AB   ... Wake UP,` with `$D8`
+drawn as spaces. END recipe from cursor col c: `Down ×5`, `Left ×(c+1)`, `A`
+(Left from col 0 wraps straight to END).
+
 The intro dialogue contains the literal farcall bytes `a0 a1 a2 a3` (twice) — the
 player-name token. Handler at bank `$17`, CPU `$7739`:
 
