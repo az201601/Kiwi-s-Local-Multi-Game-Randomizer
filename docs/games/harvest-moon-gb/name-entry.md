@@ -47,7 +47,10 @@ screen position matches `$c000`/`$c001`.
 | D-pad | move cursor (wraps) |
 
 Pure-button path to confirm (verified twice, deterministic):
-`Down ×5` (row 0 → row 5 col 0), `Left` (wrap → END), `A` → gender screen.
+`Down ×5` (row 0 → row 5, same col), `Left` repeatedly until the cursor wraps to END
+(from col 0: one Left; from col c: c+1 Lefts — Left from col 0 wraps straight to END,
+col 11), `A` → gender screen. Note: `A` on the gender/pet-pref screens issued while the
+screen is still transitioning is swallowed — allow ~100 frames after each confirm.
 
 ## Boot-to-grid recipe (fresh state)
 
@@ -89,9 +92,10 @@ intro renders name bytes by direct font lookup (name bytes bypass the VM opcode 
 `SP` cell (row 5 col 10) does nothing when A is pressed. `A` on out-of-range col 12
 backspaces one character (and see the flow-breakage note in new-game-flow.md).
 
-Untyped slots (trailing) are filled with `$D8`, drawn as an underscore-style blank in the
-name box / grid header. Names may be fewer than 4 characters; the END confirm accepts them
-and the SRAM slot keeps `$D8` padding.
+Untyped slots (trailing) are filled with `$D8`. In the grid name box it draws as an
+underscore-style blank; in dialogue it draws as a plain space (verified: farmer name `AB`
+renders in the intro as `AB` + trailing spaces — no garbage tiles). Names may be fewer
+than 4 characters; the END confirm accepts them and the SRAM slot keeps `$D8` padding.
 
 **Transition swallow**: the gender-pick and pet-preference screens swallow the first `A`
 issued while they are still sliding in (~48 f is not enough spacing from the previous
