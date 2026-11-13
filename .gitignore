@@ -1,3 +1,28 @@
 .venv/
 __pycache__/
 *.py[cod]
+
+# --- ROM files: never commit copyrighted ROMs ---
+*.gb
+*.gbc
+*.gba
+*.sfc
+*.smc
+*.n64
+*.z64
+*.nes
+*.md5.orig
+
+# mgbdis / RGBDS build output
+work/
+build/
+*.o
+*.sym
+*.map
+
+# mgbdis raw output (derivative of copyrighted ROM)
+disasm/
+
+# emulator save/RTC state from our PyBoy runs
+*.gbc.ram
+*.gbc.rtc
