@@ -23,7 +23,9 @@ java -jar KiwisMultiGameRandomizer.jar
   - Automatic 16×2 dialogue box word-wrapping + manual box-by-box mode
   - Patches Dialogue ID `0xC9` cleanly in-place (`1–19` boxes at `Bank 0x0A:$510A`) without touching adjacent NPC/Harvest Sprite dialogues, and automatically repoints via the Master Dialogue Table (`0x0367C` → `Bank 0x09:$75A1`) if you write a longer speech (`20–61` boxes)
   - Java 8 Swing GUI with live in-game tile preview, presets, `.txt` import/export, and ROM validation
-- [ ] **Next Steps** — Crops, shops & prices, tools, animals, starting items/gold, seeds, and multi-game item pools
+- [x] **Research — Grandpa's Rainy Day Money (`HMGB-CHK-001` / `HMGB-ITM-001`)** (verified in ROM code & live CGB/DMG gameplay)
+  - Traced dedicated SRAM flag (`$B8FF`, `.sav[0x18FF]`), CGB/DMG drawer handlers (`02:$59C8` / `22:$5935`), all 3 farmhouse tier attribute maps (`Bank 0x11:$7251`, `$70FD`, `$6FA9`), 24-bit Gold routines (`$B8EF..$B8F1`, `00:$0CBB`, `00:$1056`), and cataloged in [`docs/hmgb-items-and-checks.md`](docs/hmgb-items-and-checks.md) for future randomization
+- [ ] **Next Steps** — Additional items & checks research, crops, shops & prices, tools, animals, starting items/gold, seeds, and multi-game item pools
 
 ## Building From Source
 
@@ -50,6 +52,7 @@ This produces `KiwisMultiGameRandomizer.jar` in the repository root.
 ├── KiwisMultiGameRandomizer.jar              Runnable Java 8 GUI randomizer
 ├── Harvest Moon GB (USA) (SGB Enhanced).gbc  Clean base ROM (read-only)
 ├── docs/
+│   ├── hmgb-items-and-checks.md              Verified items & checks registry for randomization
 │   └── hmgb-rom-research.md                  Verified ROM disassembly & in-game notes
 └── randomizer/
     ├── build.sh / build.bat                  Java 8 build scripts
