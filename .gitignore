@@ -1,8 +1,11 @@
 .venv/
 __pycache__/
 *.py[cod]
-# Java build output (rebuild with java-randomizer/build.sh or build.bat)
-java-randomizer/out/
+
+# Java compiler scratch output (rebuilt by randomizer/build.sh or build.bat)
+randomizer/out/
 *.class
-# Patched ROMs (keep originals; rebuild with the patcher)
-*Randomizer.gbc
+
+# Generated / patched ROMs (keep clean base ROM untouched)
+*Randomizer*.gbc
+*Randomized*.gbc
