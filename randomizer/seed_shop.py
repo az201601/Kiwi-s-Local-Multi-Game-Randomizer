@@ -2,6 +2,8 @@
 
 import random
 
+from . import crop_graphics
+
 GRASS = 8
 EMPTY = 0xFF
 VANILLA = ((0, 1, GRASS), (2, 3, GRASS), (4, 5, GRASS), (6, 7, EMPTY))
@@ -53,6 +55,7 @@ def patch(rom: bytearray, seed: str, randomize_stock: bool, shuffle_slots: bool)
                 masks = start + 64 + crop * 9 + 2
                 rom[masks : masks + 2] = b"\x0f\x1f"
     if randomize_stock:
+        crop_graphics.patch(rom, inventory_rows)
         for checks in GROWTH_CHECKS:
             for season, row in enumerate(inventory_rows):
                 for crop in row:

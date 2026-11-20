@@ -2,6 +2,7 @@ import hashlib
 from pathlib import Path
 import unittest
 
+from randomizer import crop_graphics
 from randomizer.harvest_moon_gbc import patch_rainy_day_money
 from randomizer.seed_shop import EMPTY, GRASS, GROWTH_CHECKS, INIT_OFFSETS, VANILLA, inventory
 
@@ -63,6 +64,12 @@ class SeedShopTests(unittest.TestCase):
                         else:
                             self.assertEqual(patched[season_check], original[season_check])
                             self.assertEqual(patched[weather_check], original[weather_check])
+            if stock:
+                # Independently attribute changes to the graphics patch; no other
+                # bytes apart from the listed shop/growth/checksum patches may differ.
+                art_only = bytearray(original)
+                crop_graphics.patch(art_only, inventory("nina-2", stock, slots))
+                allowed.update(i for i, (old, new) in enumerate(zip(original, art_only)) if old != new)
             changed = {i for i, (old, new) in enumerate(zip(original, patched)) if old != new}
             self.assertTrue(changed <= allowed)
             self.assertEqual(int.from_bytes(patched[0x14E:0x150], "big"),
@@ -70,4 +77,4 @@ class SeedShopTests(unittest.TestCase):
         both = patch_rainy_day_money(original, 945, 377, seed="kiwi-demo",
                                     randomize_seed_stock=True, shuffle_seed_slots=True)
         self.assertEqual(hashlib.sha256(both).hexdigest(),
-                         "bb6d67b5c65c3e7628fefd9175a352b0f34d442d5d083b50449ea3e35b081ef3")
+                         "417bb4fb77df9a1822c2be9715c86d963c564c257b87ee7a6851020ed2ed99e6")

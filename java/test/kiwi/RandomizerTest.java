@@ -35,6 +35,9 @@ public final class RandomizerTest {
         check(hash(HarvestMoon.patch(original, 1)).equals(
                 "2beef0e0ca7da2961c60902659ca372df5a16b864ba81648d98d14c7ac0f226b"), "minimum matches Python patch");
         check(hash(HarvestMoon.patch(original, 1000)).equals(originalDigest), "maximum is vanilla");
+        check(hash(HarvestMoon.patch(original, 1000, 500, "nina-2", true, true)).equals(
+                "f18c9fc6d48ec6a59a4e6c5f25cfdc3072ddb72ccb0a11e00ca793365c5dfb87"),
+                "crop palette collision fix matches Python patch");
         byte[] invalid = original.clone();
         invalid[0] ^= 1;
         try {
@@ -53,11 +56,11 @@ public final class RandomizerTest {
             testOptionPair(temp, true, true,
                     "f68589c0a78337130ef72af2dfd261be5e39046e56ffcd278429cabe1f1b1c42");
             testOptions(temp, true, true, true, false,
-                    "184adbd53d97c7ba4c9475d7adc85fd5753eb4c63cfbaefae6cd6d035c8e6e86");
+                    "3a48013d4a5eb8541f5817ab0bdf4876af2c0e068dcc437b24582a346a619aa8");
             testOptions(temp, true, true, false, true,
                     "2a9b7cd1c91961d3ed3916452b482e5023c2ef591b02e038c15d161d4b529ad5");
             testOptions(temp, true, true, true, true,
-                    "bb6d67b5c65c3e7628fefd9175a352b0f34d442d5d083b50449ea3e35b081ef3");
+                    "417bb4fb77df9a1822c2be9715c86d963c564c257b87ee7a6851020ed2ed99e6");
             check(hash(HarvestMoon.patch(original, 945, 1)).equals(
                     "098b0d239e7731cdf1a9fb17090fe18cfe0bfed4f61209f5be11119db8b00e13"), "1G starting money matches Python patch");
             check(hash(Files.readAllBytes(rom)).equals(originalDigest), "original untouched");

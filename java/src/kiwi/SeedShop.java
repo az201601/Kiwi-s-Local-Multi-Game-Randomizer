@@ -78,6 +78,7 @@ final class SeedShop {
                 }
             }
         }
+        if (randomizeStock) CropGraphics.patch(rom, rows);
     }
 
     private static int[] dispatcher(int setup, int table, int records, int append) {
