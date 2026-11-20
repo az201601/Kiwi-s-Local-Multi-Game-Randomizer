@@ -1,0 +1,14 @@
+# Python / PyBoy verification tooling
+.venv/
+__pycache__/
+*.ram
+*.rtc
+*.state
+
+# Java build intermediates
+build/
+tools/.javac/
+node_modules/
+
+# Generated randomizer output
+output/
