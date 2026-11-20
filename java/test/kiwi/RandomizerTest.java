@@ -41,42 +41,56 @@ public final class RandomizerTest {
             check(expected.getMessage().contains("Unsupported ROM"), "wrong ROM message");
         }
         Path temp = Files.createTempDirectory("kiwi-java-test");
-        Path output = temp.resolve("test.gbc");
-        Path randomized = temp.resolve("randomized.gbc");
         try {
-            runFormTest(output, false);
-            check(hash(Files.readAllBytes(output)).equals(
-                    "fa517358a1fd2604a75d04ddc7a87a4b4026f4d435c1be0401d9575af10b732d"), "GUI output matches Python patch");
-            runFormTest(randomized, true);
-            check(hash(Files.readAllBytes(randomized)).equals(
-                    "f68589c0a78337130ef72af2dfd261be5e39046e56ffcd278429cabe1f1b1c42"), "GUI starting money matches Python patch");
+            testOptionPair(temp, false, false, originalDigest);
+            testOptionPair(temp, false, true,
+                    "7e16173d4cfa7837cc598d734e4b4c4a536249c2d556c7ba9351993a0958e80f");
+            testOptionPair(temp, true, false,
+                    "fa517358a1fd2604a75d04ddc7a87a4b4026f4d435c1be0401d9575af10b732d");
+            testOptionPair(temp, true, true,
+                    "f68589c0a78337130ef72af2dfd261be5e39046e56ffcd278429cabe1f1b1c42");
             check(hash(HarvestMoon.patch(original, 945, 1)).equals(
                     "098b0d239e7731cdf1a9fb17090fe18cfe0bfed4f61209f5be11119db8b00e13"), "1G starting money matches Python patch");
             check(hash(Files.readAllBytes(rom)).equals(originalDigest), "original untouched");
         } finally {
-            Files.deleteIfExists(output);
-            Files.deleteIfExists(randomized);
             Files.deleteIfExists(temp);
         }
         System.out.println("Java seed, ROM patch, and Swing form tests passed.");
     }
 
-    private static void runFormTest(Path output, boolean randomizeStartingMoney) throws Exception {
+    private static void testOptionPair(Path temp, boolean rainyDayMoney, boolean startingMoney,
+                                       String expectedDigest) throws Exception {
+        Path output = temp.resolve("test.gbc");
+        try {
+            runFormTest(output, rainyDayMoney, startingMoney);
+            check(hash(Files.readAllBytes(output)).equals(expectedDigest), "GUI output matches Python patch");
+        } finally {
+            Files.deleteIfExists(output);
+        }
+    }
+
+    private static void runFormTest(Path output, boolean randomizeRainyDayMoney, boolean randomizeStartingMoney)
+            throws Exception {
         AtomicReference<JButton> button = new AtomicReference<>();
         AtomicReference<JTextArea> result = new AtomicReference<>();
         SwingUtilities.invokeAndWait(() -> {
             JPanel form = new RandomizerApp.Form();
             find(form, JLabel.class, l -> l.getText().equals("Output ROM"), JTextField.class).setText(output.toString());
             find(form, JLabel.class, l -> l.getText().equals("Seed (optional)"), JTextField.class).setText("kiwi-demo");
-            JCheckBox checkbox = find(form, JCheckBox.class, b -> b.getText().startsWith("Randomize starting money"));
-            check(!checkbox.isSelected(), "starting money defaults to off");
-            if (randomizeStartingMoney) checkbox.doClick(0);
+            JCheckBox rainyDay = find(form, JCheckBox.class, b -> b.getText().startsWith("Randomize Grandpa"));
+            JCheckBox starting = find(form, JCheckBox.class, b -> b.getText().startsWith("Randomize starting money"));
+            check(rainyDay.isSelected(), "drawer randomization defaults to on");
+            check(!starting.isSelected(), "starting money randomization defaults to off");
+            if (!randomizeRainyDayMoney) rainyDay.doClick(0);
+            if (randomizeStartingMoney) starting.doClick(0);
             result.set(find(form, JTextArea.class, text -> true));
             button.set(find(form, JButton.class, b -> b.getText().equals("Generate patched ROM")));
             button.get().doClick(0);
         });
         String first = waitForResult(button.get(), result.get());
-        check(first.contains("945G") && first.contains("kiwi-demo"), "GUI shows seed and payout");
+        check(first.contains("kiwi-demo"), "GUI shows seed");
+        check(first.contains(randomizeRainyDayMoney ? "945G (randomized)" : "1000G (unchanged)"),
+                "GUI shows drawer payout and whether it is randomized");
         check(first.contains(randomizeStartingMoney ? "Starting money: 377G (randomized)"
                 : "Starting money: 500G (unchanged)"), "GUI shows starting money and whether it is randomized");
         SwingUtilities.invokeAndWait(() -> button.get().doClick(0));

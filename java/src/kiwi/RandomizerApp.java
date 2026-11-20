@@ -44,6 +44,7 @@ public final class RandomizerApp {
         private final JTextField source = new JTextField(36);
         private final JTextField destination = new JTextField(Paths.get("output", DEFAULT_FILENAME).toString(), 36);
         private final JTextField seed = new JTextField(36);
+        private final JCheckBox rainyDayMoney = new JCheckBox("Randomize Grandpa’s Rainy Day Money (1–1,000G)", true);
         private final JCheckBox startingMoney = new JCheckBox("Randomize starting money (1–500G)");
         private final JButton open = new JButton("Browse…");
         private final JButton save = new JButton("Choose…");
@@ -103,17 +104,20 @@ public final class RandomizerApp {
             panel.setBackground(Color.WHITE);
             panel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(BORDER),
                     new EmptyBorder(12, 14, 12, 14)));
-            JLabel feature = new JLabel("Grandpa’s Rainy Day Money   ·   1–1,000G");
+            JLabel feature = new JLabel("Randomizer options");
             feature.setFont(feature.getFont().deriveFont(Font.BOLD, 16f));
             feature.setForeground(INK);
-            panel.add(feature, across(0));
-            addField(panel, 1, "Original ROM", source, open);
-            addField(panel, 2, "Output ROM", destination, save);
-            addField(panel, 3, "Seed (optional)", seed, null);
+            addField(panel, 0, "Original ROM", source, open);
+            addField(panel, 1, "Output ROM", destination, save);
+            addField(panel, 2, "Seed (optional)", seed, null);
+            panel.add(feature, across(3));
+            rainyDayMoney.setOpaque(false);
+            rainyDayMoney.setToolTipText("Changes the one-time drawer reward. Unchecked: 1,000G.");
+            panel.add(rainyDayMoney, across(4));
             startingMoney.setOpaque(false);
-            startingMoney.setToolTipText("Changes the money you start with in a new game. Default: 500G.");
-            panel.add(startingMoney, across(4));
-            panel.add(new JLabel("Leave the seed blank for a fresh roll. Use the same options to repeat a seed."), across(5));
+            startingMoney.setToolTipText("Changes the money you start with in a new game. Unchecked: 500G.");
+            panel.add(startingMoney, across(5));
+            panel.add(new JLabel("Leave the seed blank for a fresh roll. Use the same options to repeat a seed."), across(6));
             open.addActionListener(e -> choose(false));
             save.addActionListener(e -> choose(true));
             return panel;
@@ -189,18 +193,20 @@ public final class RandomizerApp {
                 return;
             }
             String chosenSeed = seed.getText();
+            boolean randomizeRainyDayMoney = rainyDayMoney.isSelected();
             boolean randomizeStartingMoney = startingMoney.isSelected();
             setBusy(true);
             status("Validating and patching the ROM…", false);
             new SwingWorker<HarvestMoon.Result, Void>() {
                 @Override protected HarvestMoon.Result doInBackground() throws Exception {
-                    return HarvestMoon.generate(input, output, chosenSeed, randomizeStartingMoney);
+                    return HarvestMoon.generate(input, output, chosenSeed, randomizeRainyDayMoney, randomizeStartingMoney);
                 }
 
                 @Override protected void done() {
                     try {
                         HarvestMoon.Result saved = get();
                         status("Grandpa’s Rainy Day Money: " + saved.amount() + "G"
+                                + (randomizeRainyDayMoney ? " (randomized)" : " (unchanged)")
                                 + "\nStarting money: " + saved.startingMoney() + "G"
                                 + (randomizeStartingMoney ? " (randomized)" : " (unchanged)")
                                 + "\nSeed: " + saved.seed() + "\nSaved to: " + saved.output(), false);
@@ -220,7 +226,7 @@ public final class RandomizerApp {
         }
 
         private void setBusy(boolean busy) {
-            for (JComponent field : new JComponent[]{source, destination, seed, startingMoney, open, save, generate}) {
+            for (JComponent field : new JComponent[]{source, destination, seed, rainyDayMoney, startingMoney, open, save, generate}) {
                 field.setEnabled(!busy);
             }
         }

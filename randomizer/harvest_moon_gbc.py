@@ -61,12 +61,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("rom", type=Path, help="unmodified input ROM")
     parser.add_argument("output", type=Path, help="new ROM path; must not already exist")
     parser.add_argument("--seed", help="reproduce a previous roll; defaults to a fresh seed")
+    parser.add_argument("--randomize-rainy-day-money", action=argparse.BooleanOptionalAction, default=True,
+                        help="roll 1 to 1,000G for the drawer (default: enabled)")
     parser.add_argument("--randomize-starting-money", action="store_true",
                         help="roll 1 to 500G for new games instead of the default 500G")
     args = parser.parse_args(argv)
 
     seed = args.seed if args.seed is not None else secrets.token_hex(16)
-    amount = roll_rainy_day_money(seed)
+    amount = roll_rainy_day_money(seed) if args.randomize_rainy_day_money else MAX_GOLD
     starting_money = roll_starting_money(seed) if args.randomize_starting_money else VANILLA_STARTING_MONEY
     try:
         patched = patch_rainy_day_money(args.rom.read_bytes(), amount, starting_money)

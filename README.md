@@ -1,6 +1,6 @@
 # Kiwi’s Local Multi-Game Randomizer
 
-The first supported check is **Grandpa’s Rainy Day Money** in Harvest Moon GB/GBC. The drawer awards a seeded amount from **1 to 1,000G**, and the in-game receipt shows the same amount. It still pays only once, regardless of house expansion. Starting money can also be randomized from **1 to 500G** for new games. This is a local ROM patcher, not yet a multiworld client.
+The first supported check is **Grandpa’s Rainy Day Money** in Harvest Moon GB/GBC. When randomized, the drawer awards a seeded amount from **1 to 1,000G**, and the in-game receipt shows the same amount. It still pays only once, regardless of house expansion. Starting money can also be randomized from **1 to 500G** for new games. This is a local ROM patcher, not yet a multiworld client.
 
 ## Java desktop GUI
 
@@ -14,7 +14,10 @@ java -cp build/classes kiwi.RandomizerApp
 ```
 
 1. Choose the original ROM and a new `.gbc` output path. The app preselects the supported ROM if it finds it in the current directory.
-2. Leave **Seed** blank for a fresh roll or enter an existing seed. Check **Randomize starting money (1–500G)** to roll the new-game balance; unchecked keeps the original 500G. `kiwi-demo` gives 945G from the drawer and, if enabled, 377G at the start.
+2. Leave **Seed** blank for a fresh roll or enter an existing seed. Choose the options independently:
+   - **Randomize Grandpa’s Rainy Day Money (1–1,000G)** is checked by default. Uncheck it for the original **1,000G** drawer reward.
+   - **Randomize starting money (1–500G)** is unchecked by default. Unchecked keeps the original **500G** balance for new games.
+   - With both checked, `kiwi-demo` gives **377G** at the start and **945G** from the drawer. With both unchecked, the output is an unchanged copy of the original ROM.
 3. Click **Generate patched ROM**. The app displays the amount, the seed, and where it saved the new ROM. Open that ROM in your emulator.
 
 The desktop app does not need Python. It verifies the ROM revision and never overwrites an existing file. [See the GUI](docs/harvest-moon-gbc/desktop-gui.png).
@@ -46,7 +49,7 @@ python -m randomizer.harvest_moon_gbc \
 
 Load the new ROM in your emulator and start a new game. After the opening tour, face the drawer on the right of the farmhouse bed and press **A**. An existing save in which you collected the stash will not get another payout.
 
-Add `--randomize-starting-money` to roll the same starting balance as the Java GUI. This option only affects a **new game**. See the [emulator verification](docs/harvest-moon-gbc/starting-money/README.md).
+Add `--no-randomize-rainy-day-money` to retain the original drawer reward, or `--randomize-starting-money` to roll the same starting balance as the Java GUI. The starting-money option only affects a **new game**. See the [emulator verification](docs/harvest-moon-gbc/starting-money/README.md).
 
 Omit `--seed` for a fresh roll. The command prints the seed and amount. Reuse the seed with the original ROM and a new output path to reproduce that roll. It never overwrites an existing file. Only the exact [verified ROM revision](docs/harvest-moon-gbc/rainy-day-money/README.md#rom-and-references) is supported.
 

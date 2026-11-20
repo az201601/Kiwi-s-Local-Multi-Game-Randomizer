@@ -83,6 +83,25 @@ class PatchTests(unittest.TestCase):
             self.assertEqual(int.from_bytes(patched[GLOBAL_CHECKSUM], "big"),
                              sum(patched[:0x14E] + patched[0x150:]) & 0xFFFF)
 
+    def test_cli_options_are_independent(self):
+        original = ROM.read_bytes()
+        with tempfile.TemporaryDirectory() as tmp:
+            for drawer in (False, True):
+                for starting in (False, True):
+                    with self.subTest(drawer=drawer, starting=starting):
+                        output = Path(tmp) / f"drawer-{drawer}-start-{starting}.gbc"
+                        cli = [sys.executable, "-m", "randomizer.harvest_moon_gbc", str(ROM), str(output),
+                               "--seed", "kiwi-demo", "--randomize-rainy-day-money" if drawer
+                               else "--no-randomize-rainy-day-money"]
+                        if starting:
+                            cli.append("--randomize-starting-money")
+                        subprocess.run(cli, cwd=ROOT, check=True, capture_output=True, text=True)
+                        expected = patch_rainy_day_money(original, 945 if drawer else 1000,
+                                                        377 if starting else 500)
+                        self.assertEqual(output.read_bytes(), expected)
+                        if not drawer and not starting:
+                            self.assertEqual(output.read_bytes(), original)
+
     def test_cli_reproduces_output_and_does_not_overwrite(self):
         with tempfile.TemporaryDirectory() as tmp:
             first, second = [Path(tmp) / f"{i}.gbc" for i in range(2)]

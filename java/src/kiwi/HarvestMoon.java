@@ -15,6 +15,7 @@ public final class HarvestMoon {
     public static final String ROM_NAME = "Harvest Moon GB (USA) (SGB Enhanced).gbc";
     private static final String ROM_HASH = "54fe95af5ded33631db84b6ba4ecc4a86f9f7528c9c56ca678150a3246d49623";
     private static final int ROM_SIZE = 1_048_576;
+    public static final int VANILLA_RAINY_DAY_MONEY = 1000;
     public static final int VANILLA_STARTING_MONEY = 500;
     // Immediate bytes of LD A,imm instructions writing the new game's balance
     // to SRAM $B8EF/$B8F0; the adjacent high byte is already cleared by the game.
@@ -43,8 +44,8 @@ public final class HarvestMoon {
         public int startingMoney() { return startingMoney; }
     }
 
-    public static Result generate(Path input, Path output, String seed, boolean randomizeStartingMoney)
-            throws IOException {
+    public static Result generate(Path input, Path output, String seed,
+                                  boolean randomizeRainyDayMoney, boolean randomizeStartingMoney) throws IOException {
         if (seed.isEmpty()) {
             byte[] token = new byte[16];
             new SecureRandom().nextBytes(token);
@@ -53,7 +54,7 @@ public final class HarvestMoon {
         if (!Files.isRegularFile(input) || Files.size(input) != ROM_SIZE) {
             throw new IOException("Select the unmodified 1 MiB " + ROM_NAME + " file.");
         }
-        int amount = roll(seed);
+        int amount = randomizeRainyDayMoney ? roll(seed) : VANILLA_RAINY_DAY_MONEY;
         int startingMoney = randomizeStartingMoney ? rollStartingMoney(seed) : VANILLA_STARTING_MONEY;
         byte[] patched = patch(Files.readAllBytes(input), amount, startingMoney);
         Path target = output.toAbsolutePath().normalize();
@@ -64,7 +65,7 @@ public final class HarvestMoon {
     }
 
     static int roll(String seed) {
-        return new PythonSeedRandom(seed).oneTo(1000);
+        return new PythonSeedRandom(seed).oneTo(VANILLA_RAINY_DAY_MONEY);
     }
 
     static int rollStartingMoney(String seed) {
@@ -79,7 +80,7 @@ public final class HarvestMoon {
         if (startingMoney < 1 || startingMoney > VANILLA_STARTING_MONEY) {
             throw new IllegalArgumentException("Starting money must be 1 to 500G.");
         }
-        if (amount < 1 || amount > 1000) {
+        if (amount < 1 || amount > VANILLA_RAINY_DAY_MONEY) {
             throw new IllegalArgumentException("The payout must be 1 to 1,000G.");
         }
         if (source.length != ROM_SIZE || !hex(digest("SHA-256", source)).equals(ROM_HASH)) {
