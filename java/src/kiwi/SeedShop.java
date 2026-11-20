@@ -11,6 +11,15 @@ final class SeedShop {
     private static final int[] APPEND = {0x49ae, 0x4991};
     private static final int RECORD_SIZE = 9;
 
+    // Overnight season ($B884) and weather ($B8A0) comparison operands,
+    // by hardware mode and then by shop catalog index.
+    private static final int[][][] GROWTH_CHECKS = {
+        {{0xab43, 0xab6e}, {0xab86, 0xabb1}, {0xa9e2, 0xaa0d}, {0xaad8, 0xab03},
+         {0xabc9, 0xabf4}, {0xac0c, 0xac37}, {0xac4f, 0xac7a}, {0xac92, 0xacbd}},
+        {{0x8aaa3, 0x8aace}, {0x8aae6, 0x8ab11}, {0x8a942, 0x8a96d}, {0x8aa38, 0x8aa63},
+         {0x8ab29, 0x8ab54}, {0x8ab6c, 0x8ab97}, {0x8abaf, 0x8abda}, {0x8abf2, 0x8ac1d}}
+    };
+
     private SeedShop() {}
 
     static int[][] inventory(String seed, boolean randomizeStock, boolean shuffleSlots) {
@@ -56,6 +65,16 @@ final class SeedShop {
                 for (int crop = 0; crop < GRASS; crop++) {
                     rom[pos + crop * RECORD_SIZE + 2] = 0x0f;
                     rom[pos + crop * RECORD_SIZE + 3] = 0x1f;
+                }
+                // Use the same rows for sales and overnight survival. Winter uses snow
+                // for natural watering instead of rain. Leave storm logic unchanged.
+                for (int season = 0; season < rows.length; season++) {
+                    for (int crop : rows[season]) {
+                        if (crop >= GRASS) continue;
+                        int[] checks = GROWTH_CHECKS[mode][crop];
+                        rom[checks[0]] = (byte) season;
+                        rom[checks[1]] = (byte) (season == 3 ? 2 : 1);
+                    }
                 }
             }
         }

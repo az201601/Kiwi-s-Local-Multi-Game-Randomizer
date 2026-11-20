@@ -5,7 +5,7 @@ Two independent, seeded checkboxes (both off by default):
 - **Randomize seasonal seed stock** puts the eight crop seed types into four pairs. Each crop seed appears in exactly one season; the player’s name no longer filters randomized stock. Grass is included in Spring, Summer, and Fall, never Winter.
 - **Shuffle seed shop slots** changes the counter order separately for each season, including the position of Grass where sold. On its own, it preserves the original seasonal inventory and the name-based Fall/Winter filters.
 
-These options change **what Nina sells**, not the prices, planting seasons, or crop growth rules. Seeds can be bought out of season to save for later. With both options off, the shop remains untouched.
+With seasonal stock randomized, **each crop grows in the season Nina sells it** instead of its vanilla season. Crops still need water, and leaving them planted into the wrong season can kill them. Prices, Grass behavior, and the original growth stages and harvest rules are unchanged. Slot shuffling on its own does not change growing seasons.
 
 ## Screenshot verification
 
@@ -22,6 +22,34 @@ Tested on the [supported USA ROM](../rainy-day-money/README.md#rom-and-reference
 - **Game Boy mode:** All four inventories matched in monochrome mode, including [Winter’s two slots](winter-game-boy.png).
 - **Options in isolation:** In a separate Fall check, slots-only gave Grass before Eggplant with `AAA` and Grass before Peanut with `aAA`. Stock-only offered Potato and Broccoli followed by Grass for both names.
 
+## Overnight growth verification
+
+PyBoy 2.9.0, seed **`nina-2`**, both shop options enabled. The old shop build and the fixed build sell the same seeds; the difference below is what the game does when the player sleeps.
+
+### Spring Corn (Game Boy Color mode)
+
+Nina [sells Corn in Spring](spring-slot-1.png) with this seed, even though vanilla Corn grows in Summer. The test equipped a Corn bag and set up nine tilled tiles using emulator memory. The player sowed the bag using the normal **A** action. Both runs started from that same planted field, with the top-middle tile watered, and used the normal bed prompt to advance from Spring 1 to Spring 2.
+
+[Before bed: Corn sown](growing/spring-corn-sown.png) · [Date check: Spring 2](growing/spring-corn-date.png) · [After four rainy nights: seedlings](growing/spring-corn-sprouts.png)
+
+| Old shop build: next morning | Fixed build: next morning | Fixed build: harvesting Corn |
+| --- | --- | --- |
+| ![Bare tilled plot after sleeping on the old build](growing/spring-corn-old-next-morning.png) | ![Corn seeds still on the plot after sleeping on the fixed build](growing/spring-corn-fixed-next-morning.png) | ![Player holding an ear of Corn harvested from the plot](growing/spring-corn-harvest.png) |
+
+In the clear-weather comparison, the old build cleared all nine Corn tiles. The fixed build kept all nine and advanced the watered tile. In the harvest test, rain was controlled and the bed fixture was reloaded between overnight updates, carrying forward the actual crop tiles to avoid the unrelated Spring 10 horse cutscene. The crop reached maturity and was picked with **A**. The field test did not use a bag acquired in the separate shop purchase test.
+
+### Winter Tomato (original Game Boy mode)
+
+With `nina-2`, Tomato moves from Summer to Winter. This test set the season, snow forecast, and planted Tomato tiles in the emulator fixture, then ran the actual sleep routine. The fixed build kept the crop and snow watered it. Repeating the overnight update with the resulting tiles brought the crop to maturity.
+
+| Old shop build: next morning | Fixed build: next morning | Fixed build: ripe Tomatoes |
+| --- | --- | --- |
+| ![Empty snowy plot on the old build](growing/winter-tomato-old-next-morning.png) | ![Tomato seeds remain after a snowy night on the fixed build](growing/winter-tomato-fixed-next-morning.png) | ![Ripe Tomatoes in the snow on the fixed build](growing/winter-tomato-ripe.png) |
+
+Separate overnight memory checks covered all eight crops in all four seasons in both hardware modes: the assigned crops survived, dry crops waited for water, manually watered crops advanced, rain or snow advanced in-season crops as appropriate, and out-of-season crops cleared.
+
 ## ROM notes
 
 The patch replaces the Flower Shop’s nine unrolled record calls with a dispatcher at file offsets `0x2491D` and `0xA4900`. It looks up the season (`$B884`) in a four-row inventory table, then feeds the selected records to the original shop builder. The item icons, names, prices, and transaction scripts still come from the original records. The shop’s active item count and five-byte records are visible from `$CD33` in WRAM. Only stock randomization relaxes the crop records’ original season/name filters; Grass retains its vanilla filter.
+
+The same inventory rows drive the overnight crop season comparisons in both hardware modes. The weather check uses snow in Winter and rain in the other seasons. Neither the Grass handler nor the separate storm logic is patched.

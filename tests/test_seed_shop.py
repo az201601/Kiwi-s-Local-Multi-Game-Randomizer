@@ -3,7 +3,7 @@ from pathlib import Path
 import unittest
 
 from randomizer.harvest_moon_gbc import patch_rainy_day_money
-from randomizer.seed_shop import EMPTY, GRASS, INIT_OFFSETS, VANILLA, inventory
+from randomizer.seed_shop import EMPTY, GRASS, GROWTH_CHECKS, INIT_OFFSETS, VANILLA, inventory
 
 ROM = Path(__file__).resolve().parents[1] / "Harvest Moon GB (USA) (SGB Enhanced).gbc"
 
@@ -48,6 +48,21 @@ class SeedShopTests(unittest.TestCase):
                         allowed.update((masks, masks + 1))
                     else:
                         self.assertEqual(patched[masks : masks + 2], original[masks : masks + 2])
+            for checks in GROWTH_CHECKS:
+                for season, row in enumerate(inventory("nina-2", stock, slots)):
+                    for crop in row:
+                        if crop >= GRASS:
+                            continue
+                        season_check, weather_check = checks[crop]
+                        self.assertEqual(original[season_check - 4:season_check], bytes.fromhex("fa84b8fe"))
+                        self.assertEqual(original[weather_check - 4:weather_check], bytes.fromhex("faa0b8fe"))
+                        if stock:
+                            self.assertEqual(patched[season_check], season)
+                            self.assertEqual(patched[weather_check], 2 if season == 3 else 1)
+                            allowed.update((season_check, weather_check))
+                        else:
+                            self.assertEqual(patched[season_check], original[season_check])
+                            self.assertEqual(patched[weather_check], original[weather_check])
             changed = {i for i, (old, new) in enumerate(zip(original, patched)) if old != new}
             self.assertTrue(changed <= allowed)
             self.assertEqual(int.from_bytes(patched[0x14E:0x150], "big"),
@@ -55,4 +70,4 @@ class SeedShopTests(unittest.TestCase):
         both = patch_rainy_day_money(original, 945, 377, seed="kiwi-demo",
                                     randomize_seed_stock=True, shuffle_seed_slots=True)
         self.assertEqual(hashlib.sha256(both).hexdigest(),
-                         "44e23a4eb615b34e9f3af3047ebc573316cdd8c7be466d27ee30a0131582961d")
+                         "bb6d67b5c65c3e7628fefd9175a352b0f34d442d5d083b50449ea3e35b081ef3")

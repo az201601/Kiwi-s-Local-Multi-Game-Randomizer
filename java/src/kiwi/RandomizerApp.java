@@ -120,7 +120,7 @@ public final class RandomizerApp {
             startingMoney.setToolTipText("Changes the money you start with in a new game. Unchecked: 500G.");
             panel.add(startingMoney, across(5));
             seedStock.setOpaque(false);
-            seedStock.setToolTipText("Redistributes crop seeds; keeps Grass in Spring, Summer, and Fall.");
+            seedStock.setToolTipText("Shuffles when crops are sold and grown. Grass stays in Spring, Summer, and Fall.");
             panel.add(seedStock, across(6));
             seedSlots.setOpaque(false);
             seedSlots.setToolTipText("Shuffles slot order separately each season, including Grass where sold.");

@@ -17,8 +17,8 @@ java -cp build/classes kiwi.RandomizerApp
 2. Leave **Seed** blank for a fresh roll or enter an existing seed. Choose the options independently:
    - **Randomize Grandpa’s Rainy Day Money (1–1,000G)** is checked by default. Uncheck it for the original **1,000G** drawer reward.
    - **Randomize starting money (1–500G)** is unchecked by default. Unchecked keeps the original **500G** balance for new games.
-   - **Randomize seasonal seed stock** redistributes the eight crop seeds across seasons, two per season. Grass stays in Spring, Summer, and Fall.
-   - **Shuffle seed shop slots** changes the counter order separately each season. On its own it does not change what Nina sells. Both shop options are unchecked by default. [See the verified inventories and screenshots](docs/harvest-moon-gbc/seed-shop/README.md).
+   - **Randomize seasonal seed stock** redistributes the eight crop seeds across seasons, two per season. Each crop grows in the season Nina sells it. Grass stays in Spring, Summer, and Fall.
+   - **Shuffle seed shop slots** changes the counter order separately each season. On its own it does not change what Nina sells. Both shop options are unchecked by default. [See the verified inventories](docs/harvest-moon-gbc/seed-shop/README.md) and [overnight growth screenshots](docs/harvest-moon-gbc/seed-shop/README.md#overnight-growth-verification).
    - With both money options checked, `kiwi-demo` gives **377G** at the start and **945G** from the drawer. With all options unchecked, the output is an unchanged copy of the original ROM.
 3. Click **Generate patched ROM**. The app displays the amount, the seed, and where it saved the new ROM. Open that ROM in your emulator.
 

@@ -53,11 +53,11 @@ public final class RandomizerTest {
             testOptionPair(temp, true, true,
                     "f68589c0a78337130ef72af2dfd261be5e39046e56ffcd278429cabe1f1b1c42");
             testOptions(temp, true, true, true, false,
-                    "483ac8457868e39dc2c45925c3931e5bf9172684618026ae9ea14563c9f8ee0b");
+                    "184adbd53d97c7ba4c9475d7adc85fd5753eb4c63cfbaefae6cd6d035c8e6e86");
             testOptions(temp, true, true, false, true,
                     "2a9b7cd1c91961d3ed3916452b482e5023c2ef591b02e038c15d161d4b529ad5");
             testOptions(temp, true, true, true, true,
-                    "44e23a4eb615b34e9f3af3047ebc573316cdd8c7be466d27ee30a0131582961d");
+                    "bb6d67b5c65c3e7628fefd9175a352b0f34d442d5d083b50449ea3e35b081ef3");
             check(hash(HarvestMoon.patch(original, 945, 1)).equals(
                     "098b0d239e7731cdf1a9fb17090fe18cfe0bfed4f61209f5be11119db8b00e13"), "1G starting money matches Python patch");
             check(hash(Files.readAllBytes(rom)).equals(originalDigest), "original untouched");

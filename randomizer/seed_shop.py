@@ -7,6 +7,14 @@ EMPTY = 0xFF
 VANILLA = ((0, 1, GRASS), (2, 3, GRASS), (4, 5, GRASS), (6, 7, EMPTY))
 SEED_PREFIX = "harvest-moon-gbc/seed-shop/"
 INIT_OFFSETS = (0x2491D, 0xA4900)
+# Immediate operands of cp after ld a, [$B884] (season) and ld a, [$B8A0]
+# (weather) in the overnight crop handlers, in shop catalog order.
+GROWTH_CHECKS = (
+    ((0xAB43, 0xAB6E), (0xAB86, 0xABB1), (0xA9E2, 0xAA0D), (0xAAD8, 0xAB03),
+     (0xABC9, 0xABF4), (0xAC0C, 0xAC37), (0xAC4F, 0xAC7A), (0xAC92, 0xACBD)),
+    ((0x8AAA3, 0x8AACE), (0x8AAE6, 0x8AB11), (0x8A942, 0x8A96D), (0x8AA38, 0x8AA63),
+     (0x8AB29, 0x8AB54), (0x8AB6C, 0x8AB97), (0x8ABAF, 0x8ABDA), (0x8ABF2, 0x8AC1D)),
+)
 
 
 def inventory(seed: str, randomize_stock: bool, shuffle_slots: bool) -> list[list[int]]:
@@ -28,7 +36,8 @@ def inventory(seed: str, randomize_stock: bool, shuffle_slots: bool) -> list[lis
 def patch(rom: bytearray, seed: str, randomize_stock: bool, shuffle_slots: bool) -> None:
     if not (randomize_stock or shuffle_slots):
         return
-    rows = bytes(crop for row in inventory(seed, randomize_stock, shuffle_slots) for crop in row)
+    inventory_rows = inventory(seed, randomize_stock, shuffle_slots)
+    rows = bytes(crop for row in inventory_rows for crop in row)
     # See SeedShop.java for the annotated assembly of this 52-byte dispatcher.
     for start, setup, append in zip(INIT_OFFSETS, (0x4B09, 0x4AEC), (0x49AE, 0x4991)):
         origin = 0x4000 + start % 0x4000
@@ -43,3 +52,11 @@ def patch(rom: bytearray, seed: str, randomize_stock: bool, shuffle_slots: bool)
             for crop in range(GRASS):
                 masks = start + 64 + crop * 9 + 2
                 rom[masks : masks + 2] = b"\x0f\x1f"
+    if randomize_stock:
+        for checks in GROWTH_CHECKS:
+            for season, row in enumerate(inventory_rows):
+                for crop in row:
+                    if crop < GRASS:
+                        season_check, weather_check = checks[crop]
+                        rom[season_check] = season
+                        rom[weather_check] = 2 if season == 3 else 1  # snow in Winter; rain otherwise
