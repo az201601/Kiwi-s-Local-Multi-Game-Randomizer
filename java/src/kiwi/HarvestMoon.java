@@ -13,7 +13,7 @@ import static java.nio.file.StandardOpenOption.WRITE;
 /** ROM patching for the supported Harvest Moon GB (USA) revision. */
 public final class HarvestMoon {
     public static final String ROM_NAME = "Harvest Moon GB (USA) (SGB Enhanced).gbc";
-    private static final String ROM_HASH = "54fe95af5ded33631db84b6ba4ecc4a86f9f7528c9c56ca678150a3246d49623";
+    static final String ROM_HASH = "54fe95af5ded33631db84b6ba4ecc4a86f9f7528c9c56ca678150a3246d49623";
     private static final int ROM_SIZE = 1_048_576;
     public static final int VANILLA_RAINY_DAY_MONEY = 1000;
     public static final int VANILLA_STARTING_MONEY = 500;
