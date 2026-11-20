@@ -11,6 +11,11 @@ EXTRA_PALETTES = 0xE4
 EXTRA_TILES = range(0x90, 0x98)
 EXTRA_COLORS = bytes((5, 5, 5, 5, 7, 7, 7, 7))
 SOIL = (0x02, 0x10, 0x11, 0x12)
+# CGB farm backgrounds: four seasons, eight 4-color palettes per season.
+FARM_COLORS = (0x7F41A, 0x7F51A)  # dusk/night, daylight
+RIPE_PALETTE = 7
+TURNIP = 0
+COLORED_RIPE = (2, 4, 6)  # Tomato, Eggplant, Carrot
 # Per mode: live tool metatiles, map/scroll metatiles, farm loader hook,
 # trampoline padding, and larger padding in a bank accessible to the loader.
 MODES = (
@@ -54,7 +59,39 @@ def _cpu_address(offset: int) -> bytes:
     return (0x4000 + offset % 0x4000).to_bytes(2, "little")
 
 
+def _patch_ripe_colors(rom: bytearray, ripe_crops: list[list[int]]) -> None:
+    for base in FARM_COLORS:
+        # Read the native fruit colors before modifying any destination season.
+        native = [bytes(rom[base + (crop // 2) * 64 + 62 : base + (crop // 2) * 64 + 64])
+                  for crop in COLORED_RIPE]
+        for season, ripe in enumerate(ripe_crops):
+            if not ripe:
+                continue
+            start = base + season * 64
+            palette = start + RIPE_PALETTE * 8
+            # Ripe crop backdrop should match the dominant color of dry tilled soil.
+            rom[palette : palette + 2] = rom[start + 6 : start + 8]
+            rom[palette + 6 : palette + 8] = native[COLORED_RIPE.index(ripe[0])]
+            if len(ripe) == 2:
+                rom[palette + 4 : palette + 6] = native[COLORED_RIPE.index(ripe[1])]
+
+
+def _share_ripe_palette(bitmap: bytes, second: bool) -> bytes:
+    # A Game Boy tile has four colors. Reserve two for fruit, one for soil
+    # and one for foliage. Move index 2 (mid-green) to 1 (dark green), then
+    # use the freed index 2 for the second fruit instead of index 3.
+    out = bytearray(bitmap)
+    for i in range(0, len(out), 2):
+        low, high = out[i : i + 2]
+        middle = high & ~low
+        out[i] = (low | middle) & (~(low & high) if second else 0xFF)
+        out[i + 1] = high & ~middle
+    return bytes(out)
+
+
 def patch(rom: bytearray, rows: list[list[int]]) -> None:
+    ripe_crops = [sorted(crop for crop in row if crop in COLORED_RIPE) for row in rows]
+    _patch_ripe_colors(rom, ripe_crops)
     # See CropGraphics.java for the annotated LR35902 routines.
     rom[EXTRA_PALETTES : EXTRA_PALETTES + len(EXTRA_COLORS)] = EXTRA_COLORS
     helper = bytes.fromhex("f5 21 d8 1f d6 90 fe 08 30 0a fa a7 c0 fe 01 20 03 21 54 00 f1 c9")
@@ -62,7 +99,7 @@ def patch(rom: bytearray, rows: list[list[int]]) -> None:
     for offset in PALETTE_HOOKS:
         rom[offset : offset + 3] = b"\xcd" + PALETTE_HELPER.to_bytes(2, "little")
 
-    for (live, scroll, hook, trampoline, free), streams in zip(MODES, ART):
+    for mode, ((live, scroll, hook, trampoline, free), streams) in enumerate(zip(MODES, ART)):
         pictures = [_decode(rom, lo) + _decode(rom, hi) for lo, hi in zip(streams[::2], streams[1::2])]
         crop_tiles = [sorted({t for i in range(first, first + count)
                               for t in rom[live + i * 8 + 2 : live + i * 8 + 6]
@@ -82,13 +119,22 @@ def patch(rom: bytearray, rows: list[list[int]]) -> None:
                 remap = {}
                 for tile in crop_tiles[crop]:
                     dest = tile
-                    if crop == second and tile in crop_tiles[first]:
+                    source_color = rom[PALETTE + tile]
+                    # Turnip's native ripe palette is the dry foliage palette;
+                    # using it avoids tinting the dirt speckles like fruit.
+                    turnip = mode == 0 and crop == TURNIP and source_color == RIPE_PALETTE
+                    if turnip or (crop == second and tile in crop_tiles[first]):
+                        wanted = 5 if turnip else source_color
                         dest = next(t for t in slots if t not in occupied and
-                                    colors.get(t, rom[PALETTE + t]) == rom[PALETTE + tile])
+                                    colors.get(t, rom[PALETTE + t]) == wanted)
                         occupied.add(dest)
                     remap[tile] = dest
                     code.append(dest)
-                    code.extend(pictures[crop // 2][tile * 16 : tile * 16 + 16])
+                    bitmap = pictures[crop // 2][tile * 16 : tile * 16 + 16]
+                    ripe = ripe_crops[season]
+                    if mode == 0 and source_color == RIPE_PALETTE and len(ripe) == 2:
+                        bitmap = _share_ripe_palette(bitmap, crop == ripe[1])
+                    code.extend(bitmap)
                 start, count = STAGES[crop]
                 for i in range(start, start + count):
                     record = live + i * 8

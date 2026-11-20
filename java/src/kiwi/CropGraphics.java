@@ -22,10 +22,24 @@ final class CropGraphics {
         {0xac001, 0xac78a, 0xacc4e, 0xad4c8, 0xada75, 0xae205, 0xae6c9, 0xaeec3}
     };
     private static final int TILE_BYTES = 16;
+    private static final int[] FARM_COLORS = {0x7f41a, 0x7f51a}; // dusk/night, daylight
+    private static final int RIPE_PALETTE = 7;
+    private static final int TURNIP = 0;
+    private static final int[] COLORED_RIPE = {2, 4, 6}; // Tomato, Eggplant, Carrot
 
     private CropGraphics() {}
 
     static void patch(byte[] rom, int[][] rows) {
+        int[][] ripe = new int[rows.length][];
+        for (int season = 0; season < rows.length; season++) {
+            int[] selected = new int[2];
+            int count = 0;
+            for (int crop : COLORED_RIPE) {
+                for (int entry : rows[season]) if (entry == crop) selected[count++] = crop;
+            }
+            ripe[season] = java.util.Arrays.copyOf(selected, count);
+        }
+        patchRipeColors(rom, ripe);
         // Select the extra palette table only for the added farm tiles. Both
         // scrolling and live updates still use the original lookup everywhere else.
         put(rom, EXTRA_PALETTES, EXTRA_COLORS);
@@ -38,10 +52,41 @@ final class CropGraphics {
             0x21, 0x54, 0x00,             // ld hl, extraTable - $90
             0xf1, 0xc9);                  // done: pop af; ret
         for (int hook : PALETTE_HOOKS) call(rom, hook, PALETTE_HELPER);
-        for (int mode = 0; mode < MODES.length; mode++) patchMode(rom, rows, mode);
+        for (int mode = 0; mode < MODES.length; mode++) patchMode(rom, rows, ripe, mode);
     }
 
-    private static void patchMode(byte[] rom, int[][] rows, int mode) {
+    private static void patchRipeColors(byte[] rom, int[][] ripe) {
+        for (int base : FARM_COLORS) {
+            // Copy the native fruit swatches before updating any of the seasons.
+            int[] nativeFruit = new int[STAGES.length];
+            for (int crop : COLORED_RIPE) {
+                int color = base + (crop / 2) * 64 + 62;
+                nativeFruit[crop] = u(rom[color]) | (u(rom[color + 1]) << 8);
+            }
+            for (int season = 0; season < ripe.length; season++) {
+                if (ripe[season].length == 0) continue;
+                int start = base + season * 64;
+                int palette = start + RIPE_PALETTE * 8;
+                // Match the dominant shade of tilled soil (palette 0, color 3).
+                System.arraycopy(rom, start + 6, rom, palette, 2);
+                pointer(rom, palette + 6, nativeFruit[ripe[season][0]]);
+                if (ripe[season].length == 2) pointer(rom, palette + 4, nativeFruit[ripe[season][1]]);
+            }
+        }
+    }
+
+    private static void shareRipePalette(byte[] rom, int pos, boolean second) {
+        // Four colors: tilled soil, foliage, and one ripe hue per crop.
+        // Move index 2 (lighter foliage) to 1, and use 2 for the second crop's fruit.
+        for (int i = pos; i < pos + TILE_BYTES; i += 2) {
+            int low = u(rom[i]), high = u(rom[i + 1]);
+            int middle = high & ~low;
+            rom[i] = (byte) ((low | middle) & (second ? ~(low & high) : 0xff));
+            rom[i + 1] = (byte) (high & ~middle);
+        }
+    }
+
+    private static void patchMode(byte[] rom, int[][] rows, int[][] ripe, int mode) {
         int[] locations = MODES[mode];
         int live = locations[0], scroll = locations[1], hook = locations[2];
         int trampoline = locations[3], free = locations[4];
@@ -94,14 +139,21 @@ final class CropGraphics {
                 for (int tile = 0; tile < 256; tile++) {
                     dest[tile] = tile;
                     if (!cropTiles[crop][tile]) continue;
-                    if (crop == second && cropTiles[first][tile]) {
+                    // Use Turnip's equivalent dry foliage palette so its soil
+                    // speckles never pick up another crop's fruit hue.
+                    boolean turnip = mode == 0 && crop == TURNIP && colors[tile] == RIPE_PALETTE;
+                    if (turnip || (crop == second && cropTiles[first][tile])) {
+                        int wanted = turnip ? 5 : colors[tile];
                         int spare = 0;
-                        while (!slots[spare] || occupied[spare] || colors[spare] != colors[tile]) spare++;
+                        while (!slots[spare] || occupied[spare] || colors[spare] != wanted) spare++;
                         dest[tile] = spare;
                         occupied[spare] = true;
                     }
                     rom[pos++] = (byte) dest[tile];
                     System.arraycopy(pictures[crop / 2], tile * TILE_BYTES, rom, pos, TILE_BYTES);
+                    if (mode == 0 && colors[tile] == RIPE_PALETTE && ripe[season].length == 2) {
+                        shareRipePalette(rom, pos, crop == ripe[season][1]);
+                    }
                     pos += TILE_BYTES;
                 }
                 for (int i = 0; i < STAGES[crop][1]; i++) {

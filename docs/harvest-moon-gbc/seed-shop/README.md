@@ -66,7 +66,19 @@ The fixed build continued to [show ears on the ripe crop](graphics/spring-corn-r
 | --- | --- |
 | ![Four rows that all look like Carrots](graphics/winter-crops-old.png) | ![Round Tomatoes in the upper rows and Carrots below](graphics/winter-crops-fixed.png) |
 
-PyBoy checks compared the loaded tile bitmaps for every stage of all eight crops in both hardware modes. Patch tests cover all 28 possible crop pairings. The fix loads the crop's original artwork while retaining the destination season's field colors, and does not change crop growth, shop assignments, or save data.
+PyBoy checks compared the loaded tile bitmaps for every stage of all eight crops in both hardware modes. Patch tests cover all 28 possible crop pairings. The sprite fix shown here loads the crop’s original artwork without changing crop growth, shop assignments, or save data. See below for the separate color correction.
+
+## Ripe crop color verification
+
+The sprite fix above restored crop shapes but still used the destination season’s ripe-crop palette. In Spring that made ripe Tomatoes brown and the ground around them look untilled. The color fix uses each crop’s native ripe hue (Tomato red, Eggplant purple, and Carrot orange) against the season’s tilled-soil color, in both daylight and evening. Turnips use their original dry-foliage colors, which keeps their soil speckles from picking up another crop’s fruit color.
+
+| Spring Tomatoes on the previous build | Spring Tomatoes with the color fix |
+| --- | --- |
+| ![Brown Tomatoes on a bright ground color](colors/spring-tomatoes-old.png) | ![Red Tomatoes with a backdrop that matches the tilled soil in the center](colors/spring-tomatoes-fixed.png) |
+
+**PyBoy, Game Boy Color, seed `ripe-63`:** A Tomato bag was equipped on a prepared field and sown with the normal **A** action. Both builds started from the same planted plot, with a tilled center tile for comparison. The test used Year 2 to avoid the horse event, and controlled the rain while advancing nine nights with the regular sleep prompt. The same eight Tomato plants reached maturity in both runs. [Harvest on the fixed build](colors/spring-tomato-harvest.png) · [Evening palette check](colors/spring-tomatoes-evening.png).
+
+**Two fruit colors in one season:** A second fixture, `ripe-44`, put ripe Tomatoes and Eggplants on the same Spring plot. [Previously both were brown](colors/spring-tomatoes-eggplants-old.png); [now the Tomatoes are red and the Eggplants purple](colors/spring-tomatoes-eggplants-fixed.png). When two crops share the four-color ripe palette, it uses one soil color, one leaf color, and the two native fruit colors. Leaves use one shade of green in this pairing. Original Game Boy mode keeps its monochrome art.
 
 ## ROM notes
 

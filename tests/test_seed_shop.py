@@ -77,4 +77,4 @@ class SeedShopTests(unittest.TestCase):
         both = patch_rainy_day_money(original, 945, 377, seed="kiwi-demo",
                                     randomize_seed_stock=True, shuffle_seed_slots=True)
         self.assertEqual(hashlib.sha256(both).hexdigest(),
-                         "417bb4fb77df9a1822c2be9715c86d963c564c257b87ee7a6851020ed2ed99e6")
+                         "20065739b291e82c4d5032a3954c08064f9ce5f00160fc3bbc528a7dab80d990")
