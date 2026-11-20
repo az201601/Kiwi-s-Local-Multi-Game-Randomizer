@@ -45,11 +45,10 @@ def _decode(rom: bytes | bytearray, pos: int) -> bytes:
                 distance = (rom[pos] >> 4) | (rom[pos + 1] << 4)
                 length = (rom[pos] & 15) + 3
                 pos += 2
-                if 0 < distance <= len(output):
-                    for _ in range(length):
-                        output.append(output[-distance])
-                else:
-                    output.extend(bytes(length))
+                # A single reference can start in zero padding and then cross
+                # into decoded tiles. Evaluate its source one byte at a time.
+                for _ in range(length):
+                    output.append(output[-distance] if 0 < distance <= len(output) else 0)
             if len(output) == size:
                 break
     return bytes(output)

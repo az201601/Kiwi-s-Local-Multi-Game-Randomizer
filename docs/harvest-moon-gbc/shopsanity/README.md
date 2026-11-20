@@ -13,6 +13,8 @@ The prototype makes a fixed swap: **Turnip and Potato seeds go to Eve; Apple Jui
 
 The prototype extracts the original shop artwork from the ROM for each hardware mode. After stock checks, it loads four tiles for each visible item into that item’s counter slot and updates the menu record before the original renderer runs. This lets both shops reuse the native cursor, selection highlighting, and purchase scripts without assuming that the same tile number represents the same item at both shops. No new artwork files are needed to build the ROM.
 
+**Icon-top fix:** The initial prototype dropped pixels when a compressed tile reference started in zero padding and continued into previously decoded bytes. The corrected decoder preserves the full original shapes. [Before](counter-icons-before.png) · [After](counter-icons-after.png).
+
 ### Try it locally
 
 Download the [Java 8+ mixed-shop test JAR](../../../downloads/kiwi-shop-art-test-java8.jar). Open it, pick the original USA ROM, and save a new output ROM. The JAR is separate from the regular randomizer and does not require Python. You can also launch it with `java -jar kiwi-shop-art-test-java8.jar` and optionally pass the input and output paths.
@@ -26,7 +28,7 @@ python -m tools.shop_art_prototype \
 
 Open `mixed-shop.gbc` in your emulator. For the early visual test, visit Eve at 6 PM in Spring to see two seed bags among the drinks. Nina’s imported drinks only appear once individually unlocked. Use a separate emulator save for this prototype; the builder refuses to overwrite any existing output.
 
-The PyBoy verifier checked 22 menu states across both modes, including the Apple date boundary, Milk flag both ways, seed season and stock masks, the drawn tile indices, and the exact VRAM artwork. In both modes a Turnip bag cost 120G at Eve’s; at Nina’s, Apple Juice cost 500G and restored stamina from 10 to 100, and Milk cost 100G and stocked ten servings. To rerun, provide a PyBoy 2.9 town-selection state in each hardware mode with Nina’s shop highlighted:
+The PyBoy verifier matched all 14 item icons against live vanilla VRAM in each mode, then checked 22 mixed menu states, including the Apple date boundary, Milk flag both ways, seed season and stock masks, the drawn tile indices, and the exact VRAM artwork. In both modes a Turnip bag cost 120G at Eve’s; at Nina’s, Apple Juice cost 500G and restored stamina from 10 to 100, and Milk cost 100G and stocked ten servings. To rerun, provide a PyBoy 2.9 town-selection state in each hardware mode with Nina’s shop highlighted:
 
 ```sh
 python -m tools.verify_shop_art \

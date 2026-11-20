@@ -13,6 +13,13 @@ def pixels(bitmap):
             yield (low >> bit & 1) + 2 * (high >> bit & 1)
 
 
+class GraphicsDecoderTests(unittest.TestCase):
+    def test_reference_can_cross_from_padding_into_decoded_data(self):
+        # Two literal bytes, then copy five bytes starting one byte before them.
+        self.assertEqual(gfx._decode(bytes.fromhex('07 00 03 a5 5a 32 00'), 0),
+                         bytes.fromhex('a5 5a 00 a5 5a 00 a5'))
+
+
 @unittest.skipUnless(ROM.is_file(), "verified Harvest Moon ROM is not available")
 class CropGraphicsTests(unittest.TestCase):
     @classmethod

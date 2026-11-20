@@ -189,9 +189,9 @@ final class CropGraphics {
                     int length = (rom[pos] & 0xf) + 3;
                     int distance = (u(rom[pos]) >>> 4) | (u(rom[pos + 1]) << 4);
                     pos += 2;
-                    if (distance == 0 || distance > end) end += length;
-                    else for (int i = 0; i < length; i++) {
-                        output[end] = output[end - distance];
+                    // A reference can cross from zero padding into decoded data.
+                    for (int i = 0; i < length; i++) {
+                        if (distance > 0 && distance <= end) output[end] = output[end - distance];
                         end++;
                     }
                 }
