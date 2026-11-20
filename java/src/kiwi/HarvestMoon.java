@@ -45,7 +45,8 @@ public final class HarvestMoon {
     }
 
     public static Result generate(Path input, Path output, String seed,
-                                  boolean randomizeRainyDayMoney, boolean randomizeStartingMoney) throws IOException {
+                                  boolean randomizeRainyDayMoney, boolean randomizeStartingMoney,
+                                  boolean randomizeSeedStock, boolean shuffleSeedSlots) throws IOException {
         if (seed.isEmpty()) {
             byte[] token = new byte[16];
             new SecureRandom().nextBytes(token);
@@ -56,7 +57,7 @@ public final class HarvestMoon {
         }
         int amount = randomizeRainyDayMoney ? roll(seed) : VANILLA_RAINY_DAY_MONEY;
         int startingMoney = randomizeStartingMoney ? rollStartingMoney(seed) : VANILLA_STARTING_MONEY;
-        byte[] patched = patch(Files.readAllBytes(input), amount, startingMoney);
+        byte[] patched = patch(Files.readAllBytes(input), amount, startingMoney, seed, randomizeSeedStock, shuffleSeedSlots);
         Path target = output.toAbsolutePath().normalize();
         if (target.getParent() == null) throw new IOException("Choose a new output filename.");
         Files.createDirectories(target.getParent());
@@ -77,6 +78,11 @@ public final class HarvestMoon {
     }
 
     static byte[] patch(byte[] source, int amount, int startingMoney) {
+        return patch(source, amount, startingMoney, "", false, false);
+    }
+
+    static byte[] patch(byte[] source, int amount, int startingMoney, String seed,
+                        boolean randomizeSeedStock, boolean shuffleSeedSlots) {
         if (startingMoney < 1 || startingMoney > VANILLA_STARTING_MONEY) {
             throw new IllegalArgumentException("Starting money must be 1 to 500G.");
         }
@@ -102,6 +108,7 @@ public final class HarvestMoon {
             patched[offsets[0]] = (byte) startingMoney;
             patched[offsets[1]] = (byte) (startingMoney >>> 8);
         }
+        SeedShop.patch(patched, seed, randomizeSeedStock, shuffleSeedSlots);
         patched[0x14E] = patched[0x14F] = 0;
         int checksum = 0;
         for (byte b : patched) checksum += Byte.toUnsignedInt(b);

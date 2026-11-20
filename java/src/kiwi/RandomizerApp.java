@@ -46,10 +46,12 @@ public final class RandomizerApp {
         private final JTextField seed = new JTextField(36);
         private final JCheckBox rainyDayMoney = new JCheckBox("Randomize Grandpa’s Rainy Day Money (1–1,000G)", true);
         private final JCheckBox startingMoney = new JCheckBox("Randomize starting money (1–500G)");
+        private final JCheckBox seedStock = new JCheckBox("Randomize seasonal seed stock");
+        private final JCheckBox seedSlots = new JCheckBox("Shuffle seed shop slots");
         private final JButton open = new JButton("Browse…");
         private final JButton save = new JButton("Choose…");
         private final JButton generate = new JButton("Generate patched ROM");
-        private final JTextArea result = new JTextArea(5, 35);
+        private final JTextArea result = new JTextArea(6, 35);
 
         Form() {
             super(new BorderLayout(0, 18));
@@ -117,7 +119,13 @@ public final class RandomizerApp {
             startingMoney.setOpaque(false);
             startingMoney.setToolTipText("Changes the money you start with in a new game. Unchecked: 500G.");
             panel.add(startingMoney, across(5));
-            panel.add(new JLabel("Leave the seed blank for a fresh roll. Use the same options to repeat a seed."), across(6));
+            seedStock.setOpaque(false);
+            seedStock.setToolTipText("Redistributes crop seeds; keeps Grass in Spring, Summer, and Fall.");
+            panel.add(seedStock, across(6));
+            seedSlots.setOpaque(false);
+            seedSlots.setToolTipText("Shuffles slot order separately each season, including Grass where sold.");
+            panel.add(seedSlots, across(7));
+            panel.add(new JLabel("Leave the seed blank for a fresh roll. Use the same options to repeat a seed."), across(8));
             open.addActionListener(e -> choose(false));
             save.addActionListener(e -> choose(true));
             return panel;
@@ -195,11 +203,14 @@ public final class RandomizerApp {
             String chosenSeed = seed.getText();
             boolean randomizeRainyDayMoney = rainyDayMoney.isSelected();
             boolean randomizeStartingMoney = startingMoney.isSelected();
+            boolean randomizeSeedStock = seedStock.isSelected();
+            boolean shuffleSeedSlots = seedSlots.isSelected();
             setBusy(true);
             status("Validating and patching the ROM…", false);
             new SwingWorker<HarvestMoon.Result, Void>() {
                 @Override protected HarvestMoon.Result doInBackground() throws Exception {
-                    return HarvestMoon.generate(input, output, chosenSeed, randomizeRainyDayMoney, randomizeStartingMoney);
+                    return HarvestMoon.generate(input, output, chosenSeed, randomizeRainyDayMoney,
+                            randomizeStartingMoney, randomizeSeedStock, shuffleSeedSlots);
                 }
 
                 @Override protected void done() {
@@ -209,6 +220,8 @@ public final class RandomizerApp {
                                 + (randomizeRainyDayMoney ? " (randomized)" : " (unchanged)")
                                 + "\nStarting money: " + saved.startingMoney() + "G"
                                 + (randomizeStartingMoney ? " (randomized)" : " (unchanged)")
+                                + "\nSeed shop: " + (randomizeSeedStock ? "randomized stock" : "original stock")
+                                + ", " + (shuffleSeedSlots ? "shuffled slots" : "original slot ordering")
                                 + "\nSeed: " + saved.seed() + "\nSaved to: " + saved.output(), false);
                     } catch (ExecutionException e) {
                         Throwable cause = e.getCause();
@@ -226,7 +239,7 @@ public final class RandomizerApp {
         }
 
         private void setBusy(boolean busy) {
-            for (JComponent field : new JComponent[]{source, destination, seed, rainyDayMoney, startingMoney, open, save, generate}) {
+            for (JComponent field : new JComponent[]{source, destination, seed, rainyDayMoney, startingMoney, seedStock, seedSlots, open, save, generate}) {
                 field.setEnabled(!busy);
             }
         }

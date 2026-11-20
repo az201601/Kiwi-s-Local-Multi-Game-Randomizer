@@ -6,6 +6,7 @@ import java.awt.Container;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
@@ -22,6 +23,8 @@ public final class RandomizerTest {
             int start = HarvestMoon.rollStartingMoney("start-test-" + i);
             check(start >= 1 && start <= 500, "starting balance in range");
         }
+        check(Arrays.deepEquals(SeedShop.inventory("nina-2", true, true),
+                new int[][]{{3, 4, 8}, {0, 8, 5}, {8, 1, 7}, {2, 6, 255}}), "seed shop fixture order");
         Path rom = Paths.get(HarvestMoon.ROM_NAME);
         if (!Files.isRegularFile(rom)) {
             System.out.println("Java seed tests passed; ROM and GUI generation checks skipped (ROM not found).");
@@ -49,6 +52,12 @@ public final class RandomizerTest {
                     "fa517358a1fd2604a75d04ddc7a87a4b4026f4d435c1be0401d9575af10b732d");
             testOptionPair(temp, true, true,
                     "f68589c0a78337130ef72af2dfd261be5e39046e56ffcd278429cabe1f1b1c42");
+            testOptions(temp, true, true, true, false,
+                    "483ac8457868e39dc2c45925c3931e5bf9172684618026ae9ea14563c9f8ee0b");
+            testOptions(temp, true, true, false, true,
+                    "2a9b7cd1c91961d3ed3916452b482e5023c2ef591b02e038c15d161d4b529ad5");
+            testOptions(temp, true, true, true, true,
+                    "44e23a4eb615b34e9f3af3047ebc573316cdd8c7be466d27ee30a0131582961d");
             check(hash(HarvestMoon.patch(original, 945, 1)).equals(
                     "098b0d239e7731cdf1a9fb17090fe18cfe0bfed4f61209f5be11119db8b00e13"), "1G starting money matches Python patch");
             check(hash(Files.readAllBytes(rom)).equals(originalDigest), "original untouched");
@@ -60,17 +69,22 @@ public final class RandomizerTest {
 
     private static void testOptionPair(Path temp, boolean rainyDayMoney, boolean startingMoney,
                                        String expectedDigest) throws Exception {
+        testOptions(temp, rainyDayMoney, startingMoney, false, false, expectedDigest);
+    }
+
+    private static void testOptions(Path temp, boolean rainyDayMoney, boolean startingMoney,
+                                    boolean seedStock, boolean seedSlots, String expectedDigest) throws Exception {
         Path output = temp.resolve("test.gbc");
         try {
-            runFormTest(output, rainyDayMoney, startingMoney);
+            runFormTest(output, rainyDayMoney, startingMoney, seedStock, seedSlots);
             check(hash(Files.readAllBytes(output)).equals(expectedDigest), "GUI output matches Python patch");
         } finally {
             Files.deleteIfExists(output);
         }
     }
 
-    private static void runFormTest(Path output, boolean randomizeRainyDayMoney, boolean randomizeStartingMoney)
-            throws Exception {
+    private static void runFormTest(Path output, boolean randomizeRainyDayMoney, boolean randomizeStartingMoney,
+                                    boolean randomizeSeedStock, boolean shuffleSeedSlots) throws Exception {
         AtomicReference<JButton> button = new AtomicReference<>();
         AtomicReference<JTextArea> result = new AtomicReference<>();
         SwingUtilities.invokeAndWait(() -> {
@@ -81,6 +95,11 @@ public final class RandomizerTest {
             JCheckBox starting = find(form, JCheckBox.class, b -> b.getText().startsWith("Randomize starting money"));
             check(rainyDay.isSelected(), "drawer randomization defaults to on");
             check(!starting.isSelected(), "starting money randomization defaults to off");
+            JCheckBox stock = find(form, JCheckBox.class, b -> b.getText().startsWith("Randomize seasonal seed"));
+            JCheckBox slots = find(form, JCheckBox.class, b -> b.getText().startsWith("Shuffle seed shop"));
+            check(!stock.isSelected() && !slots.isSelected(), "seed shop options default to off");
+            if (randomizeSeedStock) stock.doClick(0);
+            if (shuffleSeedSlots) slots.doClick(0);
             if (!randomizeRainyDayMoney) rainyDay.doClick(0);
             if (randomizeStartingMoney) starting.doClick(0);
             result.set(find(form, JTextArea.class, text -> true));
@@ -93,6 +112,8 @@ public final class RandomizerTest {
                 "GUI shows drawer payout and whether it is randomized");
         check(first.contains(randomizeStartingMoney ? "Starting money: 377G (randomized)"
                 : "Starting money: 500G (unchanged)"), "GUI shows starting money and whether it is randomized");
+        check(first.contains(randomizeSeedStock ? "randomized stock" : "original stock"), "GUI shows stock setting");
+        check(first.contains(shuffleSeedSlots ? "shuffled slots" : "original slot ordering"), "GUI shows slots setting");
         SwingUtilities.invokeAndWait(() -> button.get().doClick(0));
         check(waitForResult(button.get(), result.get()).contains("no file was overwritten"), "GUI reports duplicate output");
     }
